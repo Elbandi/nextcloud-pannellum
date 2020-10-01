@@ -41,7 +41,7 @@
 <script nonce="<?php p(\OC::$server->getContentSecurityPolicyNonceManager()->getNonce()) ?>">
 pannellum.viewer('container', {
     "type": "equirectangular",
-    "panorama": "<?php p($_['fileId']) ?>",
+    "panorama": "<?php print($_['fileName']) ?>",
     "autoLoad": true
 });
 </script>

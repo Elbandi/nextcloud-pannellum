@@ -30,6 +30,8 @@
 </template>
 
 <script>
+import { encodePath } from '@nextcloud/paths'
+import { generateUrl } from '@nextcloud/router'
 
 export default {
 	name: 'Pannellum',
@@ -55,8 +57,8 @@ export default {
 	},
 	computed: {
 		iframeSrc() {
-			return OC.generateUrl('/apps/pannellum/show?fileId={file}', {
-				file: this.davPath,
+			return generateUrl('/apps/pannellum/show?fileName={fileName}', {
+				fileName: encodePath(this.davPath),
 			})
 		},
 	},

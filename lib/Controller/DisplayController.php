@@ -55,10 +55,10 @@ class DisplayController extends Controller {
 	 * @param bool $minmode
 	 * @return TemplateResponse
 	 */
-	public function show($fileId): TemplateResponse {
+	public function show($fileName): TemplateResponse {
 		$params = [
 			'urlGenerator' => $this->urlGenerator,
-			'fileId' => $fileId
+			'fileName' => urldecode($fileName),
 		];
 		$response = new TemplateResponse(Application::APP_ID, 'viewer', $params, 'blank');
 

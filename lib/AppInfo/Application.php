@@ -30,6 +30,7 @@ use OCA\Viewer\Event\LoadViewer;
 use OCP\AppFramework\App;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\IMimeTypeDetector;
+use OCP\Util;
 
 class Application extends App {
 
@@ -55,5 +56,8 @@ class Application extends App {
 
 		// Watch Viewer load event
 		$eventDispatcher->addServiceListener(LoadViewer::class, LoadPannellumScript::class);
+		$eventDispatcher->addListener('OCA\Files_Sharing::loadAdditionalScripts', function () {
+			Util::addScript(self::APP_ID, 'pannellum-public');
+		});
 	}
 }
