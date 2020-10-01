@@ -25,11 +25,13 @@ declare(strict_types=1);
 namespace OCA\Pannellum\AppInfo;
 
 use OCA\Pannellum\Listener\LoadPannellumScript;
+use OCA\Pannellum\Preview\PanoPreviewIProviderV2;
 use OCA\Viewer\Event\LoadViewer;
 
 use OCP\AppFramework\App;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\IMimeTypeDetector;
+use OCP\IPreview;
 use OCP\Util;
 
 class Application extends App {
@@ -49,6 +51,8 @@ class Application extends App {
 		/** @var IEventDispatcher $eventDispatcher */
 		$eventDispatcher = $server->query(IEventDispatcher::class);
 
+		$previewManager = $server->query(IPreview::class);
+
 		// registerType without getAllMappings will prevent loading nextcloud's default mappings.
 		$mimeTypeDetector->getAllMappings();
 		$mimeTypeDetector->registerType('3dpng', 'image/x-3d-png', null);
@@ -58,6 +62,10 @@ class Application extends App {
 		$eventDispatcher->addServiceListener(LoadViewer::class, LoadPannellumScript::class);
 		$eventDispatcher->addListener('OCA\Files_Sharing::loadAdditionalScripts', function () {
 			Util::addScript(self::APP_ID, 'pannellum-public');
+		});
+
+		$previewManager->registerProvider('/^image\/x-3d/', function () {
+			return new PanoPreviewIProviderV2();
 		});
 	}
 }
