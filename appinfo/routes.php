@@ -28,5 +28,6 @@ declare(strict_types=1);
 namespace OCA\Pannellum\AppInfo;
 
 return ['routes' => [
+	['name' => 'display#load', 'url' => 'load', 'verb' => 'GET'],
 	['name' => 'display#show', 'url' => 'show', 'verb' => 'GET'],
 ]];

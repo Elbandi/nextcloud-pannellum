@@ -48,17 +48,11 @@ class DisplayController extends Controller {
 		$this->urlGenerator = $urlGenerator;
 	}
 
-	/**
-	 * @PublicPage
-	 * @NoCSRFRequired
-	 *
-	 * @param bool $minmode
-	 * @return TemplateResponse
-	 */
-	public function show($fileName): TemplateResponse {
+	protected function getTemplateResponse(string $fileName, bool $autoload) {
 		$params = [
 			'urlGenerator' => $this->urlGenerator,
 			'fileName' => urldecode($fileName),
+			'autoload' => $autoload ? 'true' : 'false',
 		];
 		$response = new TemplateResponse(Application::APP_ID, 'viewer', $params, 'blank');
 
@@ -70,5 +64,28 @@ class DisplayController extends Controller {
 		$response->setContentSecurityPolicy($policy);
 
 		return $response;
+
+	}
+
+	/**
+	 * @PublicPage
+	 * @NoCSRFRequired
+	 *
+	 * @param string $fileName
+	 * @return TemplateResponse
+	 */
+	public function show($fileName): TemplateResponse {
+		return $this->getTemplateResponse($fileName, true);
+	}
+
+	/**
+	 * @PublicPage
+	 * @NoCSRFRequired
+	 *
+	 * @param string $fileName
+	 * @return TemplateResponse
+	 */
+	public function load($fileName): TemplateResponse {
+		return $this->getTemplateResponse($fileName, false);
 	}
 }

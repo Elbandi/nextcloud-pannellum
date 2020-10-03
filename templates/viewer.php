@@ -42,7 +42,7 @@
 var viewer = pannellum.viewer('container', {
     "type": "equirectangular",
     "panorama": "<?php print($_['fileName']) ?>",
-    "autoLoad": false,
+    "autoLoad": <?php print($_['autoload']) ?>,
 });
 function load() {
     viewer.loadScene();

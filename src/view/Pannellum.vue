@@ -59,7 +59,7 @@ export default {
 	},
 	computed: {
 		iframeSrc() {
-			return generateUrl('/apps/pannellum/show?fileName={fileName}', {
+			return generateUrl('/apps/pannellum/load?fileName={fileName}', {
 				fileName: encodePath(this.davPath),
 			})
 		},
