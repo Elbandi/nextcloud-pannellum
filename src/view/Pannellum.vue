@@ -26,7 +26,8 @@
 		ref="pannellumframe"
 		allowfullscreen
 		style="border-style:none;"
-		:src="iframeSrc" />
+		:src="iframeSrc"
+		@load="onFrameLoad" />
 </template>
 
 <script>
@@ -53,6 +54,7 @@ export default {
 	data() {
 		return {
 			viewer: null,
+			active: false,
 		}
 	},
 	computed: {
@@ -62,11 +64,28 @@ export default {
 			})
 		},
 	},
+	watch: {
+		active(val, old) {
+			// the item was hidden before and is now the current view
+			if (val === true && old === false) {
+				this.active = true
+			} else {
+				this.active = false
+			}
+		},
+	},
 	async mounted() {
 		this.doneLoading()
 		this.$nextTick(function() {
 			this.$el.focus()
 		})
+	},
+	methods: {
+		onFrameLoad() {
+			if (this.active) {
+				document.getElementById('pannellumframe').contentWindow.load()
+			}
+		},
 	},
 }
 </script>

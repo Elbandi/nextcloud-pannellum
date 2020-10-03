@@ -39,11 +39,14 @@
   </noscript>
 </div>
 <script nonce="<?php p(\OC::$server->getContentSecurityPolicyNonceManager()->getNonce()) ?>">
-pannellum.viewer('container', {
+var viewer = pannellum.viewer('container', {
     "type": "equirectangular",
     "panorama": "<?php print($_['fileName']) ?>",
-    "autoLoad": true
+    "autoLoad": false,
 });
+function load() {
+    viewer.loadScene();
+}
 </script>
 
 </body>
