@@ -77,15 +77,26 @@ class PanoPreviewIProviderV2 extends ProviderV2
         $previewImageTmpPath = dirname($previewImageTmp);
 
 // TODO: error handle
+        // Convert Pannellum [yaw, pitch, roll] to Hugin [yaw, pitch, roll]
+        $handle = popen(sprintf("/usr/bin/docker run -i --rm --entrypoint /usr/bin/python3 generate-panorama -c \"\n".
+            "import numpy as np\n".
+            "from scipy.spatial.transform import Rotation as R\n".
+            "pnlm_ypr = [%d, %d, 0]\n".
+            "hugin_ypr = R.from_euler('ZYX', pnlm_ypr, degrees=True).as_euler('zyx', degrees=True) * np.array([-1, -1, -1])\n".
+            "print(hugin_ypr.tolist())\"", $tagData["InitialViewHeadingDegrees"], $tagData["InitialViewPitchDegrees"]), "r");
+        $read = fread($handle, self::CHUNK_SIZE);
+        pclose($handle);
+        $hugin_ypr = json_decode($read);
+
         $handle = popen("/usr/bin/docker run -i --rm -v ". dirname($tmpPath) . ":/data -v " . $previewImageTmpPath . ":/tmp --entrypoint /usr/bin/nona generate-panorama -o /tmp/" . $previewImageTmpName . " /dev/stdin 2>&1", "w");
         fprintf($handle,
             "p f0 w%d h%d v%d  n\"JPEG q80\"\n".
             "m i0\n".
-            "o w%d h%d f4 Tpp0 Tpy0 TrX0 TrY0 TrZ0 a0 b0 c0 d0 e%d g0 p%d r24 t0 v360 y%d  n\"/data/%s\"\n",
+            "o w%d h%d f4 Tpp0 Tpy0 TrX0 TrY0 TrZ0 a0 b0 c0 d0 e-%d g0 p%d r%d t0 v360 y%d  n\"/data/%s\"\n",
             $maxX, $maxY,
             $tagData["InitialHorizontalFOVDegrees"],
             $tagData["CroppedAreaImageWidthPixels"], $tagData["CroppedAreaImageHeightPixels"], $tagData["CroppedAreaTopPixels"] / 2,
-            $tagData["InitialViewPitchDegrees"], $tagData["InitialViewHeadingDegrees"],
+            $hugin_ypr[1], $hugin_ypr[2], $hugin_ypr[0],
             basename($tmpPath)
         );
         pclose($handle);
