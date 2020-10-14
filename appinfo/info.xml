@@ -16,4 +16,9 @@
         <nextcloud min-version="15" max-version="19"/>
     </dependencies>
     <types><filesystem/></types>
+    <repair-steps>
+        <post-migration>
+            <step>OCA\Pannellum\Migration\AddMimetypeToFilecache</step>
+        </post-migration>
+    </repair-steps>
 </info>
