@@ -26,6 +26,9 @@ namespace OCA\Pannellum\AppInfo;
 
 use OCA\Pannellum\Listener\LoadPannellumScript;
 use OCA\Pannellum\Preview\PanoPreviewIProviderV2;
+use OCA\Pannellum\Service\IXmpDataReader;
+use OCA\Pannellum\Service\XmpDataReader;
+
 use OCA\Viewer\Event\LoadViewer;
 
 use OCP\AppFramework\App;
@@ -43,10 +46,11 @@ class Application extends App {
 	}
 
 	public function register() {
-		$server = $this->getContainer()->getServer();
+		$container = $this->getContainer();
+		$server = $container->getServer();
 
 		/** @var IMimeTypeDetector $mimeTypeDetector */
-		$mimeTypeDetector = $server->query(IMimeTypeDetector::class);
+		$mimeTypeDetector = $server->getMimeTypeDetector();
 
 		/** @var IEventDispatcher $eventDispatcher */
 		$eventDispatcher = $server->query(IEventDispatcher::class);
@@ -62,6 +66,10 @@ class Application extends App {
 		$eventDispatcher->addServiceListener(LoadViewer::class, LoadPannellumScript::class);
 		$eventDispatcher->addListener('OCA\Files_Sharing::loadAdditionalScripts', function () {
 			Util::addScript(self::APP_ID, 'pannellum-public');
+		});
+
+		$container->registerService(IXmpDataReader::class, function ($c) {
+			return $c->query(XmpDataReader::class);
 		});
 
 		$previewManager->registerProvider('/^image\/x-3d/', function () {

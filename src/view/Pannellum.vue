@@ -31,7 +31,6 @@
 </template>
 
 <script>
-import { encodePath } from '@nextcloud/paths'
 import { generateUrl } from '@nextcloud/router'
 
 export default {
@@ -58,10 +57,25 @@ export default {
 		}
 	},
 	computed: {
+		isPublic() {
+			return !!(document.getElementById('isPublic'))
+		},
+		shareToken() {
+			return document.getElementById('sharingToken') ? document.getElementById('sharingToken').value : null
+		},
 		iframeSrc() {
-			return generateUrl('/apps/pannellum/load?fileName={fileName}', {
-				fileName: encodePath(this.davPath),
-			})
+			if (this.isPublic) {
+				return generateUrl('/apps/pannellum/load?fileName={fileName}&fileId={fileId}&sharingToken={sharingToken}', {
+					fileName: this.filename,
+					fileId: this.fileid,
+					sharingToken: this.shareToken,
+				})
+			} else {
+				return generateUrl('/apps/pannellum/load?fileName={fileName}&fileId={fileId}', {
+					fileName: this.filename,
+					fileId: this.fileid,
+				})
+			}
 		},
 	},
 	watch: {

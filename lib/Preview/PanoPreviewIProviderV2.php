@@ -5,6 +5,9 @@ namespace OCA\Pannellum\Preview;
 require __DIR__ . '/../../../camerarawpreviews/vendor/autoload.php';
 
 use Intervention\Image\ImageManagerStatic as Image;
+
+use OCA\Pannellum\Service\IXmpDataReader;
+
 use OCP\Files\File;
 use OCP\Files\FileInfo;
 use OCP\IImage;
@@ -13,11 +16,7 @@ use OC\Preview\ProviderV2;
 
 class PanoPreviewIProviderV2 extends ProviderV2
 {
-    const DRIVER_IMAGICK = 'imagick';
-    const DRIVER_GD = 'gd';
     const CHUNK_SIZE = 8192;
-    protected $converter;
-    protected $driver;
 
     public function getMimeType(): string
     {
@@ -71,7 +70,8 @@ class PanoPreviewIProviderV2 extends ProviderV2
      * @return \Imagick
      */
     private function getResizedPreview($tmpPath, $maxX, $maxY) {
-        $tagData = $this->getXmpTag($tmpPath);
+        $xmpDataReader = \OC::$server->query(IXmpDataReader::class);
+        $tagData = $xmpDataReader->getXmpTag($tmpPath);
         $previewImageTmp = \OC::$server->getTempManager()->getTemporaryFile();
         $previewImageTmpName = basename($previewImageTmp);
         $previewImageTmpPath = dirname($previewImageTmp);
@@ -101,48 +101,5 @@ class PanoPreviewIProviderV2 extends ProviderV2
         );
         pclose($handle);
         return $previewImageTmp . ".jpg";
-    }
-
-    /**
-     * @param $tmpPath
-     * @return array
-     * @throws Exception
-     */
-    private function getXmpTag($tmpPath)
-    {
-
-        $cmd = $this->getConverter() . " -json -xmp:FullPanoWidthPixels -xmp:FullPanoHeightPixels "
-          . "-xmp:CroppedAreaImageWidthPixels -xmp:CroppedAreaImageHeightPixels -xmp:CroppedAreaTopPixels "
-          . "-xmp:InitialViewHeadingDegrees -xmp:InitialViewPitchDegrees -xmp:InitialHorizontalFOVDegrees "
-          . escapeshellarg($tmpPath);
-        $json = shell_exec($cmd);
-        // get all available previews and the file type
-        $previewData = json_decode($json, true);
-        return $previewData[0];
-    }
-
-    /**
-     * @return string
-     * @throws Exception
-     */
-    private function getConverter()
-    {
-        if (!is_null($this->converter)) {
-            return $this->converter;
-        }
-
-        $exiftoolBin = \OC_Helper::findBinaryPath('exiftool');
-        if (!is_null($exiftoolBin)) {
-            $this->converter = $exiftoolBin;
-            return $this->converter;
-        }
-
-        $exiftoolBin = exec("command -v exiftool");
-        if (!empty($exiftoolBin)) {
-            $this->converter = $exiftoolBin;
-            return $this->converter;
-        }
-
-        throw new Exception('No perl executable found. Pannellum app will not work.');
     }
 }

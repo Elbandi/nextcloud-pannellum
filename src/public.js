@@ -36,8 +36,8 @@ window.addEventListener('DOMContentLoaded', function() {
 		const sharingTokenElmt = document.getElementById('sharingToken')
 
 		const sharingToken = sharingTokenElmt.value
-		const downloadUrl = generateUrl('/s/{token}/download', { token: sharingToken })
-		const viewerUrl = generateUrl('/apps/pannellum/show?fileName={downloadUrl}', { downloadUrl })
+		const fileName = document.getElementById('filename').value
+		const viewerUrl = generateUrl('/apps/pannellum/show?fileName={fileName}&sharingToken={sharingToken}', { fileName, sharingToken })
 
 		// Create viewer frame
 		const viewerNode = document.createElement('iframe')
