@@ -29,23 +29,24 @@ use OCA\Pannellum\Preview\PanoPreviewIProviderV2;
 use OCA\Pannellum\Service\IXmpDataReader;
 use OCA\Pannellum\Service\XmpDataReader;
 
+use OCP\AppFramework\Bootstrap\IBootContext;
+use OCP\AppFramework\Bootstrap\IBootstrap;
+use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCA\Files\Event\LoadAdditionalScriptsEvent;
 use OCA\Viewer\Event\LoadViewer;
 
 use OCP\AppFramework\App;
-use OCP\EventDispatcher\IEventDispatcher;
-use OCP\Files\IMimeTypeDetector;
-use OCP\IPreview;
 use OCP\Util;
 
-class Application extends App {
+class Application extends App implements IBootstrap {
 
 	const APP_ID = 'pannellum';
 
-	public function __construct() {
-		parent::__construct(self::APP_ID);
+	public function __construct(array $params = []) {
+		parent::__construct(self::APP_ID, $params);
 	}
 
-	public function register() {
+	public function register(IRegistrationContext $context): void {
 		$container = $this->getContainer();
 		$server = $container->getServer();
 
@@ -53,9 +54,7 @@ class Application extends App {
 		$mimeTypeDetector = $server->getMimeTypeDetector();
 
 		/** @var IEventDispatcher $eventDispatcher */
-		$eventDispatcher = $server->query(IEventDispatcher::class);
-
-		$previewManager = $server->query(IPreview::class);
+		$eventDispatcher = $server->getEventDispatcher();
 
 		// registerType without getAllMappings will prevent loading nextcloud's default mappings.
 		$mimeTypeDetector->getAllMappings();
@@ -63,17 +62,18 @@ class Application extends App {
 		$mimeTypeDetector->registerType('3djpg', 'image/x-3d-jpg', null);
 
 		// Watch Viewer load event
-		$eventDispatcher->addServiceListener(LoadViewer::class, LoadPannellumScript::class);
+		$context->registerEventListener(LoadViewer::class, LoadPannellumScript::class);
+//		$eventDispatcher->addServiceListener(LoadAdditionalScriptsEvent::class, LoadPannellumScript::class);
 		$eventDispatcher->addListener('OCA\Files_Sharing::loadAdditionalScripts', function () {
 			Util::addScript(self::APP_ID, 'pannellum-public');
 		});
 
-		$container->registerService(IXmpDataReader::class, function ($c) {
-			return $c->query(XmpDataReader::class);
-		});
+		$context->registerServiceAlias(IXmpDataReader::class, XmpDataReader::class);
+#		$context->registerEventListener(AddContentSecurityPolicyEvent::class, CSPListener::class);
+		$context->registerPreviewProvider(PanoPreviewIProviderV2::class, '/^image\/x-3d/');
+	}
 
-		$previewManager->registerProvider('/^image\/x-3d/', function () {
-			return new PanoPreviewIProviderV2();
-		});
+	public function boot(IBootContext $context): void {
+
 	}
 }

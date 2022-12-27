@@ -37,6 +37,6 @@ class LoadPannellumScript implements IEventListener {
 			return;
 		}
 
-		Util::addScript(Application::APP_ID, 'pannellum-main');
+		Util::addScript(Application::APP_ID, 'pannellum-main', 'viewer');
 	}
 }
