@@ -70,6 +70,7 @@ class PanoPreviewIProviderV2 extends ProviderV2
      * @return \Imagick
      */
     private function getResizedPreview($tmpPath, $maxX, $maxY) {
+        $pannellumImage = \OC::$server->getConfig()->getSystemValueString("pannellum_image", "generate-panorama");
         $xmpDataReader = \OC::$server->query(IXmpDataReader::class);
         $tagData = $xmpDataReader->getXmpTag($tmpPath);
         $previewImageTmp = \OC::$server->getTempManager()->getTemporaryFile();
@@ -78,17 +79,18 @@ class PanoPreviewIProviderV2 extends ProviderV2
 
 // TODO: error handle
         // Convert Pannellum [yaw, pitch, roll] to Hugin [yaw, pitch, roll]
-        $handle = popen(sprintf("/usr/bin/docker run -i --rm --entrypoint /usr/bin/python3 generate-panorama -c \"\n".
+        $handle = popen(sprintf("/usr/bin/docker run -i --rm --entrypoint /usr/bin/python3 %s -c \"\n".
             "import numpy as np\n".
             "from scipy.spatial.transform import Rotation as R\n".
             "pnlm_ypr = [%d, %d, 0]\n".
             "hugin_ypr = R.from_euler('ZYX', pnlm_ypr, degrees=True).as_euler('zyx', degrees=True) * np.array([-1, -1, -1])\n".
-            "print(hugin_ypr.tolist())\"", $tagData["InitialViewHeadingDegrees"], $tagData["InitialViewPitchDegrees"]), "r");
+            "print(hugin_ypr.tolist())\"", $pannellumImage, $tagData["InitialViewHeadingDegrees"], $tagData["InitialViewPitchDegrees"]), "r");
         $read = fread($handle, self::CHUNK_SIZE);
         pclose($handle);
         $hugin_ypr = json_decode($read);
 
-        $handle = popen("/usr/bin/docker run -i --rm -v ". dirname($tmpPath) . ":/data -v " . $previewImageTmpPath . ":/tmp --entrypoint /usr/bin/nona generate-panorama -o /tmp/" . $previewImageTmpName . " /dev/stdin 2>&1", "w");
+        $handle = popen(sprintf("/usr/bin/docker run -i --rm -v \"%s:/data\" -v \"%s:/tmp\" --entrypoint /usr/bin/nona %s -o /tmp/%s /dev/stdin 2>&1",
+            dirname($tmpPath), $previewImageTmpPath, $pannellumImage, $previewImageTmpName), "w");
         fprintf($handle,
             "p f0 w%d h%d v%d  n\"JPEG q80\"\n".
             "m i0\n".
